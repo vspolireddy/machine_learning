@@ -16,7 +16,6 @@
 
 # import the libraries
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 
 
@@ -26,36 +25,136 @@ X = dataset.iloc[:, :-1].values #first 3 columns
 y = dataset.iloc[:, 3].values #last column
 
 # missing data - fill in mean value
-from sklearn.preprocessing import Imputer
-imputer = Imputer(missing_values="NaN", strategy="mean", axis=0)
-imputer = imputer.fit(X[:, 1:3]) #1:3 <-- upper bound excluded, i.e. extract column idx 1 and 2
-X[:, 1:3] = imputer.transform(X[:, 1:3])
+from sklearn.impute import SimpleImputer
+imputer = SimpleImputer(missing_values = np.nan, strategy='mean')
 
-print(dataset)
-print(X[:, 1:3])
+# skip column zero because non numerical
+imputer.fit(X[:, 1:3 ])
+X[:,1:3] = imputer.transform(X[:,1:3])
 
-# encode categorical data
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+# =============================================================================
+# France	44.0	72000.0
+# Spain	27.0	48000.0
+# Germany	30.0	54000.0
+# Spain	38.0	61000.0
+# Germany	40.0	63777.77777777778
+# France	35.0	58000.0
+# Spain	38.77777777777778	52000.0
+# France	48.0	79000.0
+# Germany	50.0	83000.0
+# France	37.0	67000.0
+# =============================================================================
 
-labelencoder_X = LabelEncoder()
-X[:, 0] = labelencoder_X.fit_transform(X[:, 0]) # name --> 0 or 1 or 2
-onehotencoder = OneHotEncoder(categorical_features=[0]) # create dummy variable representation, i.e. 0 --> 1 0 0; 1 --> 0 1 0
-X = onehotencoder.fit_transform(X).toarray()
 
-labelencoder_y = LabelEncoder()
-y = labelencoder_y.fit_transform(y) # Purchased (Yes/No)  --> 0 or 1
+## encoding 3 countries
+## one hot enconder
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
+ct = ColumnTransformer(transformers=[('encoder', OneHotEncoder(),[0])], remainder='passthrough')
+X = np.array(ct.fit_transform(X))
 
-print(y)
+### France, Spain and Germany
+# =============================================================================
+# 1.0	0.0	0.0	44.0	72000.0
+# 0.0	0.0	1.0	27.0	48000.0
+# 0.0	1.0	0.0	30.0	54000.0
+# 0.0	0.0	1.0	38.0	61000.0
+# 0.0	1.0	0.0	40.0	63777.77777777778
+# 1.0	0.0	0.0	35.0	58000.0
+# 0.0	0.0	1.0	38.77777777777778	52000.0
+# 1.0	0.0	0.0	48.0	79000.0
+# 0.0	1.0	0.0	50.0	83000.0
+# 1.0	0.0	0.0	37.0	67000.0
+# =============================================================================
 
-#
-from sklearn.model_selection import train_test_split
-X_train,X_test,y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state=0)
 
-#perform feature scaling
+## encode the dependent variable
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+y = le.fit_transform(y)
+
+# =============================================================================
+# 0
+# 1
+# 0
+# 0
+# 1
+# 1
+# 0
+# 1
+# 0
+# 1
+# 
+# =============================================================================
+
+### feature scaling
+#salary since its higer numerical will dominate the result on depedent variable
+# important to put variables on same scale
+
+#standardisation: each value of the feature minus the mean and divide by standard deviation
+# same range + or - 3 
+# =============================================================================
+# xstand = x - mean(x)
+#        ----------------------
+#        standard deviation(x)
+# 
+# # Normalisation: all the values are between 0 and 1
+# Xnorm  =  X - min(X)
+#         --------------
+#         max(x) - min(x)
+# =============================================================================
+
+
 from sklearn.preprocessing import StandardScaler
-sc_X = StandardScaler()
-X_train = sc_X.fit_transform(X_train)
-X_test = sc_X.transform(X_test)
+sc = StandardScaler()
+X = sc.fit_transform(X)
+
+
+# =============================================================================
+# 
+# 1.22474	-0.654654	-0.654654	0.758874	0.749473
+# -0.816497	-0.654654	1.52753	-1.7115	-1.43818
+# -0.816497	1.52753	-0.654654	-1.27555	-0.891265
+# -0.816497	-0.654654	1.52753	-0.113024	-0.2532
+# -0.816497	1.52753	-0.654654	0.177609	6.63219e-16
+# 1.22474	-0.654654	-0.654654	-0.548973	-0.526657
+# -0.816497	-0.654654	1.52753	0	-1.07357
+# 1.22474	-0.654654	-0.654654	1.34014	1.38754
+# -0.816497	1.52753	-0.654654	1.63077	1.75215
+# 1.22474	-0.654654	-0.654654	-0.25834	0.293712
+# =============================================================================
+
+### splitting the dataset into Traning set and Test set
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = .20, random_state=0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
